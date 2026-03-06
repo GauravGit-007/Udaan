@@ -1,61 +1,92 @@
-import React from 'react';
-import { Plane, Route, Clock, TrendingUp, Users, Calendar } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Plane, Route, Clock, TrendingUp, Users, Calendar, Loader2 } from 'lucide-react';
+import { apiService, SummaryData, MetricData, Filters } from '../services/api';
 
-const SummaryCards: React.FC = () => {
-  const summaryData = [
+interface SummaryCardsProps {
+  filters: Filters;
+}
+
+const SummaryCards: React.FC<SummaryCardsProps> = ({ filters }) => {
+  const [summary, setSummary] = useState<SummaryData | null>(null);
+  const [metrics, setMetrics] = useState<MetricData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [summaryData, metricsData] = await Promise.all([
+          apiService.fetchSummary(filters),
+          apiService.fetchMetrics(filters)
+        ]);
+        setSummary(summaryData);
+        setMetrics(metricsData);
+      } catch (err) {
+        console.error('Failed to load summary data:', err);
+        setError('Connection to backend failed. Please ensure the backend server is running.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [filters]);
+
+  const summaryCards = [
     {
       title: 'Total Flights',
-      value: '24,567',
-      change: '+12.5%',
+      value: summary?.total_flights.toLocaleString() || '0',
+      change: '+12.5%', // Placeholder as backend doesn't provide growth yet
       changeType: 'positive',
       icon: Plane,
       color: 'blue',
-      subtitle: 'This month'
+      subtitle: 'Real-time volume'
     },
     {
       title: 'Most Popular Route',
-      value: 'LAX → JFK',
-      change: '2,450 passengers',
+      value: summary?.most_popular_route || 'N/A',
+      change: 'Highest volume',
       changeType: 'neutral',
       icon: Route,
       color: 'green',
-      subtitle: 'Highest volume'
+      subtitle: 'Most active path'
     },
     {
-      title: 'Peak Demand Period',
-      value: '2:00 PM - 4:00 PM',
-      change: '+28% above average',
+      title: 'Peak Demand Date',
+      value: summary?.peak_demand_date || 'N/A',
+      change: 'Busiest day',
       changeType: 'positive',
       icon: Clock,
       color: 'purple',
-      subtitle: 'Daily peak hours'
+      subtitle: 'Demand peak'
     },
     {
-      title: 'Average Growth',
-      value: '8.7%',
-      change: 'vs last quarter',
+      title: 'Unique Airlines',
+      value: metrics?.unique_airlines.toLocaleString() || '0',
+      change: 'Active carriers',
       changeType: 'positive',
       icon: TrendingUp,
       color: 'orange',
-      subtitle: 'Quarterly trend'
+      subtitle: 'Market diversity'
     },
     {
-      title: 'Active Routes',
-      value: '1,247',
-      change: '+45 new routes',
+      title: 'Countries Served',
+      value: metrics?.countries_served.toLocaleString() || '0',
+      change: 'Global reach',
       changeType: 'positive',
       icon: Users,
       color: 'teal',
-      subtitle: 'Currently monitored'
+      subtitle: 'Network scope'
     },
     {
       title: 'Data Freshness',
-      value: '2 min ago',
+      value: 'Just now',
       change: 'Real-time updates',
       changeType: 'neutral',
       icon: Calendar,
       color: 'indigo',
-      subtitle: 'Last refresh'
+      subtitle: 'Last sync'
     }
   ];
 
@@ -71,15 +102,31 @@ const SummaryCards: React.FC = () => {
     return colors[color as keyof typeof colors] || colors.blue;
   };
 
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-12 flex flex-col items-center justify-center">
+        <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
+        <p className="text-gray-600 font-medium">Fetching market insights...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">Market Summary</h2>
-        <p className="text-gray-600">Key metrics and performance indicators</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">Market Summary</h2>
+          <p className="text-gray-600">Key metrics and performance indicators from backend API</p>
+        </div>
+        {error && (
+          <div className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm border border-red-100 animate-pulse">
+            {error}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {summaryData.map((item, index) => {
+        {summaryCards.map((item, index) => {
           const Icon = item.icon;
           return (
             <div
@@ -94,20 +141,19 @@ const SummaryCards: React.FC = () => {
                   <div className="text-sm text-gray-500">{item.subtitle}</div>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold text-gray-800">{item.title}</h3>
                 <div className="text-3xl font-bold text-gray-900">{item.value}</div>
-                
+
                 <div className="flex items-center gap-2">
                   <span
-                    className={`text-sm font-medium ${
-                      item.changeType === 'positive'
+                    className={`text-sm font-medium ${item.changeType === 'positive'
                         ? 'text-green-600'
                         : item.changeType === 'negative'
-                        ? 'text-red-600'
-                        : 'text-gray-600'
-                    }`}
+                          ? 'text-red-600'
+                          : 'text-gray-600'
+                      }`}
                   >
                     {item.change}
                   </span>
@@ -119,21 +165,6 @@ const SummaryCards: React.FC = () => {
             </div>
           );
         })}
-      </div>
-
-      {/* Flask Backend Integration Note */}
-      <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <TrendingUp className="w-5 h-5 text-blue-600" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-800">Backend Integration Ready</h3>
-        </div>
-        <p className="text-gray-600 leading-relaxed">
-          These summary cards are designed to receive real-time data from your Python Flask backend. 
-          Replace the mock data with API calls to endpoints like <code className="bg-white px-2 py-1 rounded text-sm">/api/summary</code>, 
-          <code className="bg-white px-2 py-1 rounded text-sm">/api/routes</code>, and <code className="bg-white px-2 py-1 rounded text-sm">/api/metrics</code>.
-        </p>
       </div>
     </div>
   );

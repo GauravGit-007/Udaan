@@ -1,0 +1,19 @@
+{
+    "name": "udaan-root",
+    "version": "1.0.0",
+    "description": "Unified startup for Udaan project",
+    "main": "index.js",
+    "scripts": {
+        "install:all": "npm install --prefix project && pip install -r backend/requirements.txt",
+        "prestart": "kill-port 3000 5000",
+        "dev:frontend": "npm start --prefix project",
+        "dev:backend": "cd backend && python app.py",
+        "start": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+        "clean-start": "npm run prestart && npm start",
+        "test:api": "python backend/test_api_v2.py"
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.2",
+        "kill-port": "^2.0.1"
+    }
+}
