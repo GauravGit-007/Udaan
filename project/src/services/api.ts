@@ -32,6 +32,16 @@ export interface Filters {
   end?: string;
 }
 
+export interface InsightData {
+  summary: string;
+  recommendations: string[];
+  highlights: {
+    label: string;
+    value: string;
+    type: 'positive' | 'negative' | 'neutral';
+  }[];
+}
+
 export const apiService = {
   fetchSummary: async (filters?: Filters): Promise<SummaryData> => {
     const params = filters ? new URLSearchParams(filters as any).toString() : '';
@@ -70,6 +80,15 @@ export const apiService = {
     const params = new URLSearchParams(filters as any).toString();
     const response = await fetch(`${API_BASE_URL}/routes/filter?${params}`);
     if (!response.ok) throw new Error('Failed to filter routes');
+    return response.json();
+  },
+
+  fetchInsights: async (filters?: Filters): Promise<InsightData> => {
+    const params = filters ? new URLSearchParams(filters as any).toString() : '';
+    const url = `${API_BASE_URL}/ai-insights?${params}`;
+    console.log(`[API] Fetching insights: ${url}`);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch insights: ${response.statusText}`);
     return response.json();
   }
 };

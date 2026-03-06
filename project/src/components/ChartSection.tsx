@@ -1,6 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { BarChart3, TrendingUp, Activity, Loader2 } from 'lucide-react';
 import { apiService, RouteData, Filters } from '../services/api';
+import GlassCard from './GlassCard';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  Cell
+} from 'recharts';
 
 interface ChartSectionProps {
   filters: Filters;
@@ -28,93 +39,103 @@ const ChartSection: React.FC<ChartSectionProps> = ({ filters }) => {
     loadRoutes();
   }, [filters]);
 
-  const maxPassengers = routes.length > 0 ? Math.max(...routes.map(r => r.passengers)) : 0;
+  if (loading) return null;
 
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-12 flex flex-col items-center justify-center bg-white rounded-2xl shadow-xl border border-gray-100 mt-8">
-        <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
-        <p className="text-gray-600 font-medium">Analyzing flight routes...</p>
-      </div>
-    );
-  }
+  const chartData = routes.map(r => ({
+    name: r.route.split(' → ')[0],
+    fullName: r.route,
+    volume: r.passengers,
+    growth: r.growth
+  }));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <BarChart3 className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800">Top 10 Popular Routes</h2>
-              <p className="text-gray-600">Passenger volume and growth trends from backend</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Activity className="w-4 h-4" />
-            <span>Updated: Just now</span>
-          </div>
-        </div>
+    <div className="w-full">
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-gray-800 tracking-tight">Route Analytics</h2>
+        <p className="text-gray-500">Volume distribution across top performing paths</p>
+      </div>
 
-        {error ? (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
-            <p className="text-red-600 font-medium">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Retry
-            </button>
+      <div className="grid grid-cols-1 gap-8">
+        <GlassCard className="p-8 h-[500px]" delay={0.3}>
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-xl font-bold text-gray-800">Passenger Volume Distribution</h3>
+            <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-gray-400">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span>High Demand</span>
+              </div>
+            </div>
           </div>
-        ) : routes.length === 0 ? (
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center">
-            <p className="text-gray-600">No route data available at the moment.</p>
+
+          <div className="h-[380px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }}
+                  dy={10}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#94a3b8', fontSize: 12 }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    borderRadius: '16px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                  }}
+                  itemStyle={{ color: '#1e40af', fontWeight: 700 }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="volume"
+                  stroke="#3b82f6"
+                  strokeWidth={4}
+                  fillOpacity={1}
+                  fill="url(#colorVolume)"
+                  animationDuration={2000}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
-        ) : (
-          /* Chart Container */
-          <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 mb-6">
-            <div className="space-y-4">
-              {routes.map((route, index) => (
-                <div key={index} className="group">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                        {index + 1}
-                      </div>
-                      <span className="font-medium text-gray-800">{route.route}</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm text-gray-600">{route.passengers.toLocaleString()} passengers</span>
-                      <div className={`flex items-center gap-1 ${route.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        <TrendingUp className={`w-4 h-4 ${route.growth < 0 ? 'rotate-180' : ''}`} />
-                        <span className="text-sm font-medium">{route.growth >= 0 ? '+' : ''}{route.growth}%</span>
-                      </div>
-                    </div>
+        </GlassCard>
+
+        {/* Detailed List inside GlassCard */}
+        <GlassCard className="p-8" delay={0.4}>
+          <h3 className="text-xl font-bold text-gray-800 mb-6">Detailed Route Performance</h3>
+          <div className="space-y-4">
+            {routes.map((route, idx) => (
+              <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-white/40 border border-white/20 hover:bg-white/60 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-blue-200">
+                    {idx + 1}
                   </div>
-                  <div className="relative">
-                    <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-1000 ease-out group-hover:from-blue-400 group-hover:to-blue-500"
-                        style={{ width: `${(route.passengers / (maxPassengers || 1)) * 100}%` }}
-                      ></div>
-                    </div>
+                  <div>
+                    <div className="font-bold text-gray-800">{route.route}</div>
+                    <div className="text-xs text-gray-400 font-semibold uppercase">{route.departure_code} to {route.arrival_code}</div>
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="text-right">
+                  <div className="text-lg font-bold text-gray-900">{route.passengers.toLocaleString()}</div>
+                  <div className="text-xs font-bold text-green-500 uppercase">Growth Active</div>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-
-        {!error && (
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center gap-3">
-            <BarChart3 className="w-5 h-5 text-blue-600" />
-            <p className="text-blue-800 text-sm">
-              Live data connection established with Flask Backend.
-            </p>
-          </div>
-        )}
+        </GlassCard>
       </div>
     </div>
   );

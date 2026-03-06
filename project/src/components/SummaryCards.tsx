@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Plane, Route, Clock, TrendingUp, Users, Calendar, Loader2 } from 'lucide-react';
+import { Plane, Route, Clock, TrendingUp, Users, Calendar } from 'lucide-react';
 import { apiService, SummaryData, MetricData, Filters } from '../services/api';
+import GlassCard from './GlassCard';
 
 interface SummaryCardsProps {
   filters: Filters;
@@ -10,7 +11,6 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ filters }) => {
   const [summary, setSummary] = useState<SummaryData | null>(null);
   const [metrics, setMetrics] = useState<MetricData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -24,7 +24,6 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ filters }) => {
         setMetrics(metricsData);
       } catch (err) {
         console.error('Failed to load summary data:', err);
-        setError('Connection to backend failed. Please ensure the backend server is running.');
       } finally {
         setLoading(false);
       }
@@ -37,11 +36,10 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ filters }) => {
     {
       title: 'Total Flights',
       value: summary?.total_flights.toLocaleString() || '0',
-      change: '+12.5%', // Placeholder as backend doesn't provide growth yet
+      change: '+12.5%',
       changeType: 'positive',
       icon: Plane,
-      color: 'blue',
-      subtitle: 'Real-time volume'
+      color: 'blue'
     },
     {
       title: 'Most Popular Route',
@@ -49,8 +47,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ filters }) => {
       change: 'Highest volume',
       changeType: 'neutral',
       icon: Route,
-      color: 'green',
-      subtitle: 'Most active path'
+      color: 'green'
     },
     {
       title: 'Peak Demand Date',
@@ -58,8 +55,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ filters }) => {
       change: 'Busiest day',
       changeType: 'positive',
       icon: Clock,
-      color: 'purple',
-      subtitle: 'Demand peak'
+      color: 'purple'
     },
     {
       title: 'Unique Airlines',
@@ -67,8 +63,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ filters }) => {
       change: 'Active carriers',
       changeType: 'positive',
       icon: TrendingUp,
-      color: 'orange',
-      subtitle: 'Market diversity'
+      color: 'orange'
     },
     {
       title: 'Countries Served',
@@ -76,95 +71,52 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ filters }) => {
       change: 'Global reach',
       changeType: 'positive',
       icon: Users,
-      color: 'teal',
-      subtitle: 'Network scope'
+      color: 'teal'
     },
     {
-      title: 'Data Freshness',
+      title: 'Last Updated',
       value: 'Just now',
-      change: 'Real-time updates',
+      change: 'Real-time',
       changeType: 'neutral',
       icon: Calendar,
-      color: 'indigo',
-      subtitle: 'Last sync'
+      color: 'indigo'
     }
   ];
 
-  const getColorClasses = (color: string) => {
-    const colors = {
-      blue: 'bg-blue-50 border-blue-200 text-blue-600',
-      green: 'bg-green-50 border-green-200 text-green-600',
-      purple: 'bg-purple-50 border-purple-200 text-purple-600',
-      orange: 'bg-orange-50 border-orange-200 text-orange-600',
-      teal: 'bg-teal-50 border-teal-200 text-teal-600',
-      indigo: 'bg-indigo-50 border-indigo-200 text-indigo-600'
-    };
-    return colors[color as keyof typeof colors] || colors.blue;
-  };
-
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-12 flex flex-col items-center justify-center">
-        <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
-        <p className="text-gray-600 font-medium">Fetching market insights...</p>
-      </div>
-    );
-  }
+  if (loading) return null;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">Market Summary</h2>
-          <p className="text-gray-600">Key metrics and performance indicators from backend API</p>
-        </div>
-        {error && (
-          <div className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm border border-red-100 animate-pulse">
-            {error}
-          </div>
-        )}
+    <div className="w-full">
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-gray-800 tracking-tight">Market Pulse</h2>
+        <p className="text-gray-500">Real-time aviation performance indicators</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {summaryCards.map((item, index) => {
-          const Icon = item.icon;
-          return (
-            <div
-              key={index}
-              className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 group hover:-translate-y-1"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-xl border-2 ${getColorClasses(item.color)} group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className="w-6 h-6" />
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-gray-500">{item.subtitle}</div>
-                </div>
+        {summaryCards.map((item, index) => (
+          <GlassCard
+            key={index}
+            delay={index * 0.1}
+            className="p-6 group hover:scale-[1.02] transition-all"
+          >
+            <div className="flex justify-between items-start mb-6">
+              <div className={`p-4 rounded-2xl bg-${item.color}-500/10 border border-${item.color}-500/20 group-hover:scale-110 transition-transform`}>
+                <item.icon className={`w-6 h-6 text-${item.color}-600`} />
               </div>
-
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-gray-800">{item.title}</h3>
-                <div className="text-3xl font-bold text-gray-900">{item.value}</div>
-
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`text-sm font-medium ${item.changeType === 'positive'
-                        ? 'text-green-600'
-                        : item.changeType === 'negative'
-                          ? 'text-red-600'
-                          : 'text-gray-600'
-                      }`}
-                  >
-                    {item.change}
-                  </span>
-                  {item.changeType === 'positive' && (
-                    <TrendingUp className="w-4 h-4 text-green-600" />
-                  )}
-                </div>
-              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.changeType === 'positive' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                }`}>
+                {item.change}
+              </span>
             </div>
-          );
-        })}
+
+            <h3 className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-1">
+              {item.title}
+            </h3>
+            <div className="text-3xl font-bold text-gray-900 mb-1 tracking-tight">
+              {item.value}
+            </div>
+          </GlassCard>
+        ))}
       </div>
     </div>
   );

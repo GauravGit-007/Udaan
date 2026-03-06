@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased text-gray-900 min-h-screen;
+    background: radial-gradient(at 0% 0%, hsla(210, 100%, 95%, 1) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225, 100%, 92%, 1) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(240, 100%, 95%, 1) 0, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(210, 100%, 98%, 1) 0, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(225, 100%, 96%, 1) 0, transparent 50%);
+    background-attachment: fixed;
+  }
+}
+
+@layer components {
+  .glass-morphism {
+    @apply bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl;
+  }
+  
+  .mesh-gradient {
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(147, 51, 234, 0.1) 0, transparent 50%);
+  }
+}
