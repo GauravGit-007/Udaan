@@ -11,6 +11,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ filters }) => {
   const [summary, setSummary] = useState<SummaryData | null>(null);
   const [metrics, setMetrics] = useState<MetricData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {

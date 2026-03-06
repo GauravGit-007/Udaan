@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { apiService, RouteData, Filters } from '../services/api';
 import GlassCard from './GlassCard';
 import {
@@ -41,11 +42,11 @@ const ChartSection: React.FC<ChartSectionProps> = ({ filters }) => {
 
   if (loading) return null;
 
-  const chartData = routes.map(r => ({
-    name: r.route.split(' → ')[0],
-    fullName: r.route,
-    volume: r.passengers,
-    growth: r.growth
+  const chartData = (routes || []).map(r => ({
+    name: r.route ? r.route.split(' → ')[0] : 'Unknown',
+    fullName: r.route || 'Unknown',
+    volume: r.passengers || 0,
+    growth: r.growth || 0
   }));
 
   return (
