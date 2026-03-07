@@ -189,5 +189,7 @@ def get_prices():
 def ai_insights():
     data = get_filtered_data()
     insights = generate_insights(data)
-    return jsonify(insights)
+@api.route("/api/health")
+def health_check():
+    return jsonify({"status": "healthy", "timestamp": datetime.now().isoformat()})
 
