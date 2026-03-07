@@ -1,9 +1,9 @@
 from flask import Blueprint, jsonify, request
-from aviation_api import fetch_flight_data
-from travelpayouts_api import get_flight_prices
+from .aviation_api import fetch_flight_data
+from .travelpayouts_api import get_flight_prices
 from collections import defaultdict
 from datetime import datetime
-from insights_service import generate_insights
+from .insights_service import generate_insights
 
 api = Blueprint('api', __name__)
 
